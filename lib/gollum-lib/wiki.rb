@@ -592,6 +592,9 @@ module Gollum
       results = {}
 
       @repo.git.grep(*args).split("\n").each do |line|
+        # Change encoding from ASCII-8BIT to UTF-8,
+        # to avoid incompatible character encodings error.
+        line.force_encoding('UTF-8')
         result = line.split(':')
         result_1 = result[1]
         # Remove ext only from known extensions.
@@ -604,6 +607,13 @@ module Gollum
       # Use git ls-files '*query*' to search for file names. Grep only searches file content.
       # Spaces are converted to dashes when saving pages to disk.
       @repo.git.ls_files({}, "*#{ query.gsub(' ', '-') }*").split("\n").each do |line|
+        # Change encoding from ASCII-8BIT to UTF-8,
+        # to avoid incompatible character encodings error.
+        line.force_encoding('UTF-8')
+
+        # Unescape ls-files results of multi-byte characters.
+        line = eval(line) if line[0] == '"'
+
         # Remove ext only from known extensions.
         file_name = Page::valid_page_name?(line) ? line.chomp(::File.extname(line)) :
                     line
